@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Link Generator</title>
+  <style>
+    body {
+      margin-top: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #imageContainer {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    #imageContainer img {
+      width: 100px;
+      height: 100px;
+      margin: 5px; /* Add margin between images if needed */
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <input type="file" id="fileInput" accept=".json">
+  <div id="imageContainer"></div>
+
+  <script>
+    let displayedItems = 0;
+    let itemsPerPage = 50;
+
+    document.getElementById('fileInput').addEventListener('change', handleFileSelect, false);
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(event) {
+        const contents = event.target.result;
+        const links = JSON.parse(contents);
+
+        if (links) {
+          const container = document.getElementById('imageContainer');
+          container.innerHTML = ''; // Clear existing content
+
+          links.slice(displayedItems, displayedItems + itemsPerPage).forEach(linkObj => {
+            const imgElement = document.createElement('img');
+            imgElement.src = linkObj.image_link;
+
+            imgElement.addEventListener('click', function() {
+              // Handle the action when the image is clicked
+              // For example, you may want to redirect to the link or perform some other action
+              window.location.href = linkObj.invitation_link;
+            });
+
+            container.appendChild(imgElement);
+          });
+
+          displayedItems += itemsPerPage;
+
+          // Add scroll event listener to window
+          window.addEventListener('scroll', function() {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+              // Scrolled to the bottom, load more items if available
+              const remainingItems = links.length - displayedItems;
+              const itemsToLoad = Math.min(itemsPerPage, remainingItems);
+
+              if (itemsToLoad > 0) {
+                links.slice(displayedItems, displayedItems + itemsToLoad).forEach(linkObj => {
+                  const imgElement = document.createElement('img');
+                  imgElement.src = linkObj.image_link;
+
+                  imgElement.addEventListener('click', function() {
+                    window.location.href = linkObj.invitation_link;
+                  });
+
+                  container.appendChild(imgElement);
+                });
+
+                displayedItems += itemsToLoad;
+              }
+            }
+          });
+        } else {
+          alert('No links found in the file.');
+        }
+      };
+
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
